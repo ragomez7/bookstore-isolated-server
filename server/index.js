@@ -1,6 +1,4 @@
-import http from 'http';
 import cors from 'cors';
-
 import express from 'express';
 import bodyParser from 'body-parser';
 import booksRouter from './routes/booksRouter.js';
