@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import _ from 'lodash';
-import { hashResponseBody, NotFoundError } from '../../util/index.js';
+import { AuthorNotFoundError, hashResponseBody, NotFoundError } from '../../util/index.js';
 import { pool } from '../index.js';
 
 const authorsRouter = Router();
@@ -55,18 +55,27 @@ authorsRouter.get("/:authorId", async (req, res) => {
     const { authorId } = req.params;
     try {
         const select = await pool.query('SELECT * FROM authors WHERE id = $1', [authorId]);
-        let result = select.rows[0];
-        if (result === undefined) {
-            throw new NotFoundError();
+        const author = select.rows[0];
+        if (author === undefined) {
+            throw new AuthorNotFoundError();
         }
         // res.set({
         //     'ETag': hashResponseBody(result),
         //     'Cache-control': 'public, max-age=604800',
         //     'Last-Modified': result.updatedat
         // });
-        res.status(200).json(result);
+        const selfURI = `${req.protocol}://${req.get('host')}/authors/${author.id}`;
+        const responseBody = {
+            author,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
+        }
+        res.status(200).json(responseBody);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "AuthorNotFoundError") {
             res.status(404).send(err.message);
         } else {
             res.status(400).send(err);
@@ -94,13 +103,22 @@ authorsRouter.post('/', async (req, res) => {
     try {
         const insert = await pool.query(`INSERT INTO authors (name, country_of_birth, birth_date, is_dead, createdAt, updatedAt) 
                                          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`, [authorName, countryOfBirth, birthDate, isDead, new Date(), new Date()]);
-        const result = insert.rows[0];
+        const author = insert.rows[0];
         // res.set({
         //     "Location": `${req.protocol}://${req.get('host')}/authors/${result.id}`,
         //     "Last-Modified": result.createdat
 
         // })
-        res.status(201).send(result)
+        const selfURI = `${req.protocol}://${req.get('host')}/authors/${author.id}`;
+        const responseBody = {
+            author,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
+        }
+        res.status(201).send(responseBody)
     } catch (err) {
         console.log(err)
         if (err) {
@@ -132,13 +150,22 @@ authorsRouter.patch('/:authorId', async (req, res) => {
     const { newAuthorName } = _.mapKeys(req.query, (value, key) => _.camelCase(key))
     try {
         const insert = await pool.query('UPDATE authors SET name = $1, updatedAt = $2 WHERE id = $3 RETURNING *', [newAuthorName, new Date(), authorId]);
-        const result = insert.rows[0];
-        if (result === undefined) {
-            throw new NotFoundError();
+        const author = insert.rows[0];
+        if (author === undefined) {
+            throw new AuthorNotFoundError();
         }
-        res.status(200).send(result);
+        const selfURI = `${req.protocol}://${req.get('host')}/authors/${author.id}`;
+        const responseBody = {
+            author,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
+        }
+        res.status(200).send(responseBody);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "AuthorNotFoundError") {
             res.status(404).send(err.message);
         } else {
             res.status(400).send(err);
@@ -161,11 +188,11 @@ authorsRouter.delete('/:authorId', async (req, res) => {
         const deleteAuthor = await pool.query('DELETE FROM authors WHERE id = $1 RETURNING *', [authorId]);
         const result = deleteAuthor.rows[0];
         if (result === undefined) {
-            throw new NotFoundError();
+            throw new AuthorNotFoundError();
         }
         res.status(200).json(result);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "AuthorNotFoundError") {
             res.status(404).send(err.message);
         } else {
             res.status(400).send(err);

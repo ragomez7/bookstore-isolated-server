@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AuthorNotFoundError, BookNotFoundError, hashResponseBody, NotFoundError } from '../../util/index.js';
+import { AuthorNotFoundError, BookNotFoundError, hashResponseBody } from '../../util/index.js';
 import _ from 'lodash';
 import { pool } from '../index.js';
 
