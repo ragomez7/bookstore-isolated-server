@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AuthorNotFoundError, hashResponseBody, NotFoundError } from '../../util/index.js';
+import { AuthorNotFoundError, BookNotFoundError, hashResponseBody, NotFoundError } from '../../util/index.js';
 import _ from 'lodash';
 import { pool } from '../index.js';
 
@@ -55,7 +55,7 @@ booksRouter.get('/:bookId', async (req, res) => {
         const select = await pool.query('SELECT * FROM books WHERE id = $1', [bookId])
         const book = select.rows[0];
         if (book === undefined) {
-            throw new NotFoundError()
+            throw new BookNotFoundError()
         }
         const selfURI = `${req.protocol}://${req.get('host')}/books/${book.id}`;
         
@@ -74,7 +74,7 @@ booksRouter.get('/:bookId', async (req, res) => {
         }
         res.status(200).send(responseBody);
     } catch (err) {
-        if (err.name === 'NotFoundError') {
+        if (err.name === 'BookNotFoundError') {
             res.status(404).send(err.message)
         } else {
             res.status(400).send(err.message);
@@ -132,7 +132,7 @@ booksRouter.post('/', async (req, res) => {
         const author = await pool.query('SELECT id FROM authors WHERE ID = $1', [authorId]);
         const authorExists =  author.rows[0];
         if (!authorExists) {
-            throw new AuthorNotFoundError()
+            throw new BookNotFoundError()
         } else {
             const insert = await pool.query('INSERT INTO books (title, author_id, page_count, book_thumbnail, createdAt, updatedAt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [bookTitle, authorId, pageCount, bookThumbnail, new Date(), new Date()]);
             const insertResult = insert.rows[0];
@@ -155,10 +155,10 @@ booksRouter.post('/', async (req, res) => {
             res.status(201).send(responseBody)
         }
     } catch (err) {
-        if (err.name === "AuthorNotFoundError") {
+        if (err.name === "BookNotFoundError") {
             res.status(404).send(err.message)
         } else {
-            res.status(400).send(`${err.message}`);
+            res.status(400).send(err);
         }
     }
 });
@@ -171,7 +171,7 @@ booksRouter.patch('/:bookId', async (req, res) => {
         const updatedBook = update.rows[0]
         const selfURI = `${req.protocol}://${req.get('host')}/books/${bookId}`;
         if (updatedBook === undefined) {
-            throw new NotFoundError();
+            throw new BookNotFoundError();
         }
         const responseBody = {
             book: updatedBook,
@@ -183,7 +183,11 @@ booksRouter.patch('/:bookId', async (req, res) => {
         }
         res.status(200).send(responseBody);
     } catch (err) {
-        
+        if (err.name === "BookNotFoundError") {
+            res.status(404).send(err.message)
+        } else {
+            res.status(400).send(err)
+        }
     };
 });
 
@@ -194,11 +198,11 @@ booksRouter.delete('/:bookId', async (req, res) => {
         const delete_book = await pool.query('DELETE FROM books WHERE id = $1 RETURNING *', [bookId]);
         const result = delete_book.rows[0];
         if (result === undefined) {
-            throw new NotFoundError();
+            throw new BookNotFoundError();
         }
         res.status(200).send(result);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "BookNotFoundError") {
             res.status(404).send(err.message)
         } else {
             res.status(400).send(err);
