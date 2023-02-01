@@ -5,10 +5,11 @@ import pg from 'pg';
 
 
 const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+    host: 'localhost',
+    port: 5432,
+    user: 'me',
+    password: 'password',
+    database: 'bookstore'
 })
 const booksRouter = Router();
 
@@ -18,7 +19,17 @@ booksRouter.get('/', async (req, res) => {
     limit = ["undefined", "null", undefined].includes(limit) ? null : limit;
     searchTitleTerm = ["undefined", "null", undefined].includes(searchTitleTerm) ? "" : searchTitleTerm;
     try {
-        const allBooks = await pool.query(`SELECT books.*, authors.name 
+        const allBooks = await pool.query(`SELECT 
+                                            books.id,
+                                            books.title,
+                                            books.page_count,
+                                            books.description,
+                                            books.book_thumbnail,
+                                            books.language,
+                                            books.createdAt,
+                                            books.updatedAt,
+                                            books.author_id,
+                                            authors.name AS author_name 
                                             FROM books 
                                                 JOIN authors ON books.author_id = authors.id
                                                 WHERE books.title ILIKE $1
@@ -52,6 +63,7 @@ booksRouter.get('/:bookId', async (req, res) => {
         if (result === undefined) {
             throw new NotFoundError()
         }
+        const newBookId = result.id;
         const selfURI = `${req.protocol}://${req.get('host')}/books/${newBookId}`;
         result.links = {
             "self": {
