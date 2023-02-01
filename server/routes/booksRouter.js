@@ -129,7 +129,7 @@ booksRouter.post('/', async (req, res) => {
         const author = await pool.query('SELECT id FROM authors WHERE ID = $1', [authorId]);
         const authorExists =  author.rows[0];
         if (!authorExists) {
-            throw AuthorNotFoundError()
+            throw new AuthorNotFoundError()
         } else {
             const insert = await pool.query('INSERT INTO books (title, author_id, page_count, book_thumbnail, createdAt, updatedAt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [bookTitle, authorId, pageCount, bookThumbnail, new Date(), new Date()]);
             const insertResult = insert.rows[0];
