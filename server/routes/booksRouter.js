@@ -52,24 +52,27 @@ booksRouter.get('/', async (req, res) => {
 booksRouter.get('/:bookId', async (req, res) => {
     const { bookId } = req.params;
     try {
-        const books = await pool.query('SELECT * FROM books WHERE id = $1', [bookId])
-        const result = books.rows[0];
-        if (result === undefined) {
+        const select = await pool.query('SELECT * FROM books WHERE id = $1', [bookId])
+        const book = select.rows[0];
+        if (book === undefined) {
             throw new NotFoundError()
         }
-        const newBookId = result.id;
-        const selfURI = `${req.protocol}://${req.get('host')}/books/${newBookId}`;
-        result.links = {
-            "self": {
-                "href": selfURI
-            }
-        }
+        const selfURI = `${req.protocol}://${req.get('host')}/books/${book.id}`;
+        
         // res.set({
         //     'ETag': hashResponseBody(result),
         //     'Cache-control': 'public, max-age=604800',
         //     'Last-Modified': result.updatedat
         // });
-        res.status(200).send(result);
+        const responseBody = {
+            book
+        }
+        responseBody.links = {
+            "self": {
+                "href": selfURI
+            }
+        }
+        res.status(200).send(responseBody);
     } catch (err) {
         if (err.name === 'NotFoundError') {
             res.status(404).send(err.message)
@@ -160,38 +163,25 @@ booksRouter.post('/', async (req, res) => {
     }
 });
 
-// This should be gone? Is not RESTy ? ?
-booksRouter.post('/addNewAuthorAndBook/:bookTitle/:authorName/:authorAge/', async (req, res) => {
-    let { bookTitle, authorName, authorAge } = req.params;
-    try {
-        const insertAuthor = await pool.query('INSERT INTO authors (name, age) VALUES ($1, $2) RETURNING *', [authorName, authorAge]);
-        const insertAuthorResult = insertAuthor.rows[0];
-        const newAuthorId = insertAuthorResult.id;
-        const insertBook = await pool.query('INSERT INTO books (title, author_id) VALUES ($1, $2) RETURNING *', [bookTitle, newAuthorId]);
-        const insertBookResult = insertBook.rows[0];
-        const newBookId = insertBookResult.id;
-        const responseBody = {
-            "author": insertAuthorResult,
-            "book": insertBookResult
-        }
-        res.status(200).send(responseBody)
-    } catch (err) {
-        if (err) {
-            res.status(400).send(`${err.message}`);
-        }
-    }
-});
-
 booksRouter.patch('/:bookId', async (req, res) => {
     const { bookId } = req.params;
     const { newBookTitle } = _.mapKeys(req.query, (value, key) => _.camelCase(key))
     try {
         const update = await pool.query('UPDATE books SET title = $1, updatedAt = $2 WHERE id = $3 RETURNING *', [newBookTitle, new Date(), bookId]);
-        const result = update.rows[0]
-        if (result === undefined) {
+        const updatedBook = update.rows[0]
+        const selfURI = `${req.protocol}://${req.get('host')}/books/${bookId}`;
+        if (updatedBook === undefined) {
             throw new NotFoundError();
         }
-        res.status(200).send(result);
+        const responseBody = {
+            book: updatedBook,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
+        }
+        res.status(200).send(responseBody);
     } catch (err) {
         
     };
