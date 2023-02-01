@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import _ from 'lodash';
-import { hashResponseBody, NotFoundError } from '../../util/index.js';
+import { hashResponseBody, NotFoundError, ReaderNotFoundError } from '../../util/index.js';
 import { pool } from '../index.js';
 
 const readersRouter = Router();
@@ -37,18 +37,27 @@ readersRouter.get('/:readerId', async (req, res) => {
     const { readerId } = req.params;
     try {
         const select = await pool.query('SELECT * FROM readers WHERE id = $1', [readerId]);
-        const result = select.rows[0];
-        if (result === undefined) {
-            throw new NotFoundError();
+        const reader = select.rows[0];
+        if (reader === undefined) {
+            throw new ReaderNotFoundError();
+        }
+        const selfURI = `${req.protocol}://${req.get('host')}/reader/${reader.id}`;
+        const responseBody = {
+            reader,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
         }
         res.set({
-            'ETag': hashResponseBody(result),
+            'ETag': hashResponseBody(reader),
             'Cache-control': 'public, max-age=604800',
-            'Last-Modified': result.updatedat
+            'Last-Modified': reader.updatedat
         });
-        res.status(200).send(result);
+        res.status(200).send(responseBody);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "ReaderNotFoundError") {
             res.status(404).send(err.message);
         } else {
             res.status(400).send(err);
@@ -63,12 +72,12 @@ readersRouter.get('/:readerId/books', async (req, res) => {
                                             LEFT JOIN books AS B
                                                 ON BR.book_id = B.id
                                              WHERE BR.reader_id = $1`, [readerId]);
-        const result = select.rows;
+        const booksBeingReadByReader = select.rows;
         // res.set({
         //     'ETag': hashResponseBody(result),
         //     'Cache-control': 'public, max-age=604800',
         // });
-        res.status(200).send(result);
+        res.status(200).send(booksBeingReadByReader);
     } catch (err) {
         res.status(400).send(err);
     }
@@ -78,13 +87,21 @@ readersRouter.post('/', async (req, res) => {
     const { readerName, readerAge, readerEmail } = _.mapKeys(req.query, (value, key) => _.camelCase(key))
     try {
         const insert = await pool.query('INSERT INTO readers (name, age, email, createdAt, updatedAt) VALUES ($1, $2, $3, $4, $5) RETURNING *', [readerName, readerAge, readerEmail, new Date(), new Date()]);
-        const result = insert.rows[0];
+        const reader = insert.rows[0];
+        const selfURI = `${req.protocol}://${req.get('host')}/reader/${reader.id}`;
+        const responseBody = {
+            reader,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
+        }
         res.set({
-            "Location": `${req.protocol}://${req.get('host')}/readers/${result.id}`,
-            "Last-Modified": result.createdat
-
-        })
-        res.status(201).send(result);
+            "Location": `${req.protocol}://${req.get('host')}/readers/${reader.id}`,
+            "Last-Modified": reader.createdat
+        });
+        res.status(201).send(responseBody);
     } catch (err) {
         res.status(400).send(err);
     }
@@ -120,13 +137,13 @@ readersRouter.delete('/:readerId', async (req, res) => {
     try {
         await pool.query('DELETE FROM books_readers WHERE reader_id = $1', [readerId]);
         const deleteReader = await pool.query('DELETE FROM readers WHERE id = $1 RETURNING *', [readerId]);
-        const result = deleteReader.rows[0];
-        if (result === undefined) {
-            throw new NotFoundError();
+        const reader = deleteReader.rows[0];
+        if (reader === undefined) {
+            throw new ReaderNotFoundError();
         }
-        res.status(200).send(result);
+        res.status(200).send(reader);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "ReaderNotFoundError") {
             res.status(404).send(err.message);
         } else {
             res.status(400).send(err);
@@ -139,20 +156,27 @@ readersRouter.patch('/:readerId', async (req, res) => {
     const { newReaderName } = _.mapKeys(req.query, (value, key) => _.camelCase(key))
     try {
         const updateName = await pool.query('UPDATE readers SET name = $1, updatedAt = $2 WHERE id = $3 RETURNING *', [newReaderName, new Date(), readerId]);
-        const result = updateName.rows[0];
-        if (result === undefined) {
-            throw new NotFoundError();
+        const reader = updateName.rows[0];
+        if (reader === undefined) {
+            throw new ReaderNotFoundError();
         }
-        res.status(200).send(result);
+        const selfURI = `${req.protocol}://${req.get('host')}/reader/${reader.id}`;
+        const responseBody = {
+            reader,
+            links: {
+                self: {
+                    href: selfURI
+                }
+            }
+        }
+        res.status(200).send(responseBody);
     } catch (err) {
-        if (err.name === "NotFoundError") {
+        if (err.name === "ReaderNotFoundError") {
             res.status(404).send(err.message);
         } else {
             res.status(400).send(err);
         }
     }
 })
-
-
 
 export default readersRouter;

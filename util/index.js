@@ -26,7 +26,7 @@ export class AuthorNotFoundError extends Error {
   constructor() {
     super();
     this.name = "AuthorNotFoundError";
-    this.message = "This author ID does not exist. Please add it first or try Adding a new author and book."
+    this.message = "Your request included an author ID that does not exist. Try again with an author that exists."
   }
 }
 
@@ -35,5 +35,13 @@ export class BookNotFoundError extends Error {
     super();
     this.name = "BookNotFoundError";
     this.message = "This book ID does not exist. Are you sure you requested the right ID?"
+  }
+}
+
+export class ReaderNotFoundError extends Error {
+  constructor() {
+    super();
+    this.name = "ReaderNotFoundError";
+    this.message = "This reader ID does not exist. Are you sure you requested the right ID?"
   }
 }
