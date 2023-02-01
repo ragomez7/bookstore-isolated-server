@@ -1,12 +1,6 @@
 import { Router } from 'express';
-import pg from 'pg';
+import { pool } from '../index.js';
 
-const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-})
 const countRouter = Router();
 
 countRouter.get('/', async (req, res) => {

@@ -1,16 +1,10 @@
 import { Router } from 'express';
 import { AuthorNotFoundError, hashResponseBody, NotFoundError } from '../../util/index.js';
 import _ from 'lodash';
-import pg from 'pg';
+import { pool } from '../index.js';
 
 
-const pool = new pg.Pool({
-    host: 'localhost',
-    port: 5432,
-    user: 'me',
-    password: 'password',
-    database: 'bookstore'
-})
+
 const booksRouter = Router();
 
 booksRouter.get('/', async (req, res) => {

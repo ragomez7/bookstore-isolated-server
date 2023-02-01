@@ -1,14 +1,7 @@
 import { Router } from 'express';
-import pg from 'pg';
 import _ from 'lodash';
 import { hashResponseBody, NotFoundError } from '../../util/index.js';
-
-const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+import { pool } from '../index.js';
 
 const authorsRouter = Router();
 
