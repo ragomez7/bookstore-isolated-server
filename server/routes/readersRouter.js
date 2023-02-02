@@ -68,6 +68,11 @@ readersRouter.get('/:readerId', async (req, res) => {
 readersRouter.get('/:readerId/books', async (req, res) => {
     const { readerId } = req.params;
     try {
+        const selectReader = await pool.query('SELECT * FROM readers WHERE id = $1', [readerId]);
+        const reader = selectReader.rows[0]
+        if (book === undefined) {
+            throw new ReaderNotFoundError()
+        }
         const select = await pool.query(`SELECT B.* FROM books_readers AS BR 
                                             LEFT JOIN books AS B
                                                 ON BR.book_id = B.id
@@ -79,7 +84,11 @@ readersRouter.get('/:readerId/books', async (req, res) => {
         // });
         res.status(200).send(booksBeingReadByReader);
     } catch (err) {
-        res.status(400).send(err);
+        if (err.name === "ReaderNotFoundError") {
+            res.status(404).send(err.message);
+        } else {
+            res.status(400).send(err);
+        }
     }
 })
 

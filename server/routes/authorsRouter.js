@@ -86,15 +86,24 @@ authorsRouter.get("/:authorId", async (req, res) => {
 authorsRouter.get('/:authorId/books', async (req, res) => {
     const { authorId } = req.params;
     try {
-        const books = await pool.query('SELECT * FROM books WHERE author_id = $1', [authorId]);
-        const result = books.rows;
+        const selectAuthor = await pool.query('SELECT * FROM authors WHERE id = $1', [authorId]);
+        const author = selectAuthor.rows[0]
+        if (author === undefined) {
+            throw new AuthorNotFoundError()
+        }
+        const selectAllBooksByAuthor = await pool.query('SELECT * FROM books WHERE author_id = $1', [authorId]);
+        const allBooksByAuthor = selectAllBooksByAuthor.rows;
         // res.set({
         //     'ETag': hashResponseBody(result),
         //     'Cache-control': 'public, max-age=604800',
         // });
-        res.status(200).send(result);
+        res.status(200).send(allBooksByAuthor);
     } catch (err) {
-        res.status(400).send(err);
+        if (err.name === 'AuthorNotFoundError') {
+            res.status(404).send(err.message)
+        } else {
+            res.status(400).send(err);
+        }
     }
 });
 

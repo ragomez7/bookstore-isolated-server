@@ -85,18 +85,27 @@ booksRouter.get('/:bookId', async (req, res) => {
 booksRouter.get('/:bookId/readers', async (req, res) => {
     const { bookId } = req.params;
     try {
-        const allBookReaders = await pool.query(`SELECT R.* FROM books_readers AS BR 
+        const selectBook = await pool.query('SELECT * FROM books WHERE id = $1', [bookId]);
+        const book = selectBook.rows[0]
+        if (book === undefined) {
+            throw new BookNotFoundError()
+        }
+        const selectAllBookReaders = await pool.query(`SELECT R.* FROM books_readers AS BR 
                                                     LEFT JOIN readers AS R
                                                         ON BR.reader_id = R.id
                                                     WHERE BR.book_id = $1`, [bookId]);
-        const result = allBookReaders.rows;
+        const allBookReaders = selectAllBookReaders.rows;
         // res.set({
         //     'ETag': hashResponseBody(result),
         //     'Cache-control': 'public, max-age=604800',
         // });
-        res.status(200).send(result);
+        res.status(200).send(allBookReaders);
     } catch (err) {
-        res.status(400).send(err);
+        if (err.name === 'BookNotFoundError') {
+            res.status(404).send(err.message)
+        } else {
+            res.status(400).send(err);
+        }
     }
 })
 booksRouter.post('/addBook2/', async (req, res) => {
@@ -146,11 +155,9 @@ booksRouter.post('/', async (req, res) => {
                     }
                 }
             };
-            
             // res.set({
             //     "Location": selfURI,
             //     "Last-Modified": responseBody.book.createdat
-
             // })
             res.status(201).send(responseBody)
         }
