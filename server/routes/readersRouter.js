@@ -67,10 +67,11 @@ readersRouter.get('/:readerId', async (req, res) => {
 });
 readersRouter.get('/:readerId/books', async (req, res) => {
     const { readerId } = req.params;
+    console.log(readerId)
     try {
         const selectReader = await pool.query('SELECT * FROM readers WHERE id = $1', [readerId]);
         const reader = selectReader.rows[0]
-        if (book === undefined) {
+        if (reader === undefined) {
             throw new ReaderNotFoundError()
         }
         const select = await pool.query(`SELECT B.* FROM books_readers AS BR 
@@ -82,6 +83,7 @@ readersRouter.get('/:readerId/books', async (req, res) => {
         //     'ETag': hashResponseBody(result),
         //     'Cache-control': 'public, max-age=604800',
         // });
+        console.log(booksBeingReadByReader)
         res.status(200).send(booksBeingReadByReader);
     } catch (err) {
         if (err.name === "ReaderNotFoundError") {
