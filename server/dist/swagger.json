@@ -1,0 +1,1223 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "John's Bookstore",
+    "description": "This is John's Bookstore's REST API.",
+    "contact": {
+      "name": "Rafael Gomez",
+      "url": "https://github.com/ragomez7",
+      "email": "satrgomez7@gmail.com"
+    },
+    "version": "1.0.0"
+  },
+  "externalDocs": {
+    "description": "Find out more about this project",
+    "url": "https://github.com/ragomez7/bookstore"
+  },
+  "servers": [
+    {
+      "url": "https://johns-bookstore-server.herokuapp.com/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "books",
+      "description": "Books resource for John's Bookstore"
+    },
+    {
+      "name": "authors",
+      "description": "Authors resource for John's Bookstore"
+    },
+    {
+      "name": "readers",
+      "description": "Readers resource for John's Bookstore"
+    }
+  ],
+  "paths": {
+    "/books": {
+      "get": {
+        "tags": [
+          "books"
+        ],
+        "summary": "Get a filterable array of books sorted by author name.",
+        "description": "Get a filterable list of books sorted by author name.",
+        "operationId": "getBooks",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The number of books to skip before starting to collect the result"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The maximum number of books the response will include."
+          },
+          {
+            "in": "query",
+            "name": "search-title-term",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A string to filter books by title."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Book array fetch succesful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Books"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Books"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "books"
+        ],
+        "summary": "Add a new book.",
+        "description": "Add a new book.",
+        "operationId": "addBook",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "book-title",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The book's title"
+          },
+          {
+            "in": "query",
+            "name": "author-id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Existing author ID which identifies the author of the book."
+          },
+          {
+            "in": "query",
+            "name": "page-count",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "Book's number of pages."
+          },
+          {
+            "in": "query",
+            "name": "book-thumbnail",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Link of book's thumbnail"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Book created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "book": {
+                      "$ref": "#/components/schemas/Book"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/BookLinks"
+                    }
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Book"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error within the request"
+          },
+          "404": {
+            "description": "Author with this ID doesn't exist.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This author ID does not exist. Please add it first or try Adding a new author and book."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/books/{bookId}": {
+      "get": {
+        "tags": [
+          "books"
+        ],
+        "summary": "Get a book by ID.",
+        "description": "Get a book by ID.",
+        "operationId": "getBookById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the book to get."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Book fetch succesful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "book": {
+                      "$ref": "#/components/schemas/Book"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/BookLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error within the request"
+          },
+          "404": {
+            "description": "Book not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This book ID does not exist. Are you sure you requested the right ID?"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "books"
+        ],
+        "summary": "Update a book's title.",
+        "description": "Update a book's title.",
+        "operationId": "updateBookTitleById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of book to be updated."
+          },
+          {
+            "in": "query",
+            "name": "new-book-title",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "New book title."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated book title succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "book": {
+                      "$ref": "#/components/schemas/Book"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/BookLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request."
+          },
+          "404": {
+            "description": "This book ID does not exist.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This book ID does not exist. Are you sure you requested the right ID?"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "books"
+        ],
+        "summary": "Delete a book.",
+        "description": "Delete a book.",
+        "operationId": "deleteBookById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of book to be deleted"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted book succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Book"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          },
+          "404": {
+            "description": "This book ID does not exist.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This book ID does not exist. Are you sure you requested the right ID?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/books/{bookId}/readers": {
+      "get": {
+        "tags": [
+          "books"
+        ],
+        "summary": "Get an array of all readers currently reading the book.",
+        "description": "Get an array of all readers currently reading the book.",
+        "operationId": "getAllBookReaders",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bookId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of book to query."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetched list of readers succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Readers"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          }
+        }
+      }
+    },
+    "/authors": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Get a filterable array of authors sorted by name.",
+        "description": "Get a filterable array of authors sorted by name.",
+        "operationId": "getAuthors",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The number of authors to skip before starting to collect the result"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The maximum number of authors the response will include."
+          },
+          {
+            "in": "query",
+            "name": "author-name-term",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A string to filter authors by name."
+          },
+          {
+            "in": "query",
+            "name": "country-of-birth-term",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A string to filter authors by country of birth."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Author fetch succesful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Authors"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Add a new author.",
+        "description": "Add a new author.",
+        "operationId": "addAuthor",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "author-name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the author."
+          },
+          {
+            "in": "query",
+            "name": "country-of-birth",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The author's country of birth."
+          },
+          {
+            "in": "query",
+            "name": "birth-date",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The author's birth date."
+          },
+          {
+            "in": "query",
+            "name": "is-dead",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Is the author dead?"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Author created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "book": {
+                      "$ref": "#/components/schemas/Author"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/AuthorLinks"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authors/{authorId}": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Get an author by ID.",
+        "description": "Get an author by ID.",
+        "operationId": "getAuthorById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "authorId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the author to get."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Author fetch succesful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "author": {
+                      "$ref": "#/components/schemas/Author"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/AuthorLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error within the request"
+          },
+          "404": {
+            "description": "Author not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Your request included an author ID that does not exist. Please try againa with an author that exists."
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Update an author's name.",
+        "description": "Update an author's name.",
+        "operationId": "updateAuthorNameById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "authorId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of author to be updated."
+          },
+          {
+            "in": "query",
+            "name": "new-author-name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "New author name."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated author name succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "book": {
+                      "$ref": "#/components/schemas/Author"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/AuthorLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request."
+          },
+          "404": {
+            "description": "Author not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Your request included an author ID that does not exist. Please try againa with an author that exists."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Delete an author.",
+        "description": "Delete an author.",
+        "operationId": "deleteAuthorById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "authorId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of author to be deleted"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted author succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Author"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          },
+          "404": {
+            "description": "Author ID not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Your request included an author ID that does not exist. Try again with an author that exists."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/authors/countries": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Fetches the set of countries where authors where born",
+        "description": "Fetches the set of countries where authors where born",
+        "operationId": "getCountriesFromAuthors",
+        "responses": {
+          "200": {
+            "description": "Deleted author succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "Colombia": {
+                        "type": "string",
+                        "example": "Colombia"
+                      },
+                      "United States": {
+                        "type": "string",
+                        "example": "United States"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          }
+        }
+      }
+    },
+    "/authors/{authorId}/books": {
+      "get": {
+        "tags": [
+          "authors"
+        ],
+        "summary": "Get an array of all books published on the platform by the passed author.",
+        "description": "Get an array of all books published on the platform by the passed author.",
+        "operationId": "getAllBooksByAuthor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "authorId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of author to query."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetched list of books succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Books"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          }
+        }
+      }
+    },
+    "/readers": {
+      "get": {
+        "tags": [
+          "readers"
+        ],
+        "summary": "Get a filterable array of readers sorted by name.",
+        "description": "Get a filterable array of readers sorted by name.",
+        "operationId": "getReaders",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The number of readers to skip before starting to collect the result"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The maximum number of readers the response will include."
+          },
+          {
+            "in": "query",
+            "name": "reader-name-term",
+            "schema": {
+              "type": "string"
+            },
+            "description": "A string to filter readers by name."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reader fetch succesful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Readers"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "readers"
+        ],
+        "summary": "Add a new reader.",
+        "description": "Add a new reader.",
+        "operationId": "addReader",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "reader-name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The name of the reader."
+          },
+          {
+            "in": "query",
+            "name": "reader-age",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The reader's age."
+          },
+          {
+            "in": "query",
+            "name": "reader-email",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The reader's email."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reader created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reader": {
+                      "$ref": "#/components/schemas/Reader"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/ReaderLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request."
+          }
+        }
+      }
+    },
+    "/readers/{readerId}": {
+      "get": {
+        "tags": [
+          "readers"
+        ],
+        "summary": "Get a reader by ID.",
+        "description": "Get a reader by ID.",
+        "operationId": "getReaderById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "readerId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the reader to get."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reader fetch succesful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reader": {
+                      "$ref": "#/components/schemas/Reader"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/ReaderLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error within the request"
+          },
+          "404": {
+            "description": "Reader not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This reader ID does not exist. Are you sure you requested the right ID?"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "readers"
+        ],
+        "summary": "Update an reader's name.",
+        "description": "Update an reader's name.",
+        "operationId": "updateReaderNameById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "readerId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of reader to be updated."
+          },
+          {
+            "in": "query",
+            "name": "new-reader-name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "New reader's name."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated reader name succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "book": {
+                      "$ref": "#/components/schemas/Reader"
+                    },
+                    "links": {
+                      "$ref": "#/components/schemas/ReaderLinks"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request."
+          },
+          "404": {
+            "description": "Reader not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This reader ID does not exist. Are you sure you requested the right ID?."
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "readers"
+        ],
+        "summary": "Delete an reader.",
+        "description": "Delete an reader.",
+        "operationId": "deleteReaderById",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "readerId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of author to be deleted"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted reader succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reader"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          },
+          "404": {
+            "description": "Reader ID not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This reader ID does not exist. Are you sure you requested the right ID?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readers/{readerId}/books": {
+      "get": {
+        "tags": [
+          "readers"
+        ],
+        "summary": "Get an array of all books currently being read by the reader.",
+        "description": "Get an array of all books currently being read by the reader.",
+        "operationId": "getAllReaderBooks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "readerId",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of reader to query."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetched list of books succesfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Books"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Some error in the request"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Books": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Book"
+        }
+      },
+      "Book": {
+        "required": [
+          "name",
+          "photoUrls"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 228
+          },
+          "title": {
+            "type": "string",
+            "example": "The Darkroom of Damocles"
+          },
+          "author_id": {
+            "type": "integer",
+            "example": 2
+          },
+          "page_count": {
+            "type": "integer",
+            "example": 416
+          },
+          "description": {
+            "type": "string",
+            "example": "Book description"
+          },
+          "book_thumbnail": {
+            "type": "string",
+            "example": "http://books.google.com/books/content?id=qgy-zQEACAAJ&printsec=frontcover&img=1&zoom=5&source=gbs_api"
+          },
+          "language": {
+            "type": "string",
+            "example": "English"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-31T17:57:53.057Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-31T17:57:53.057Z"
+          }
+        }
+      },
+      "BookLinks": {
+        "type": "object",
+        "properties": {
+          "self": {
+            "$ref": "#/components/schemas/BookSelf"
+          }
+        }
+      },
+      "BookSelf": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string",
+            "example": "http://johns-bookstore-server.herokuapp.com/books/228"
+          }
+        }
+      },
+      "Authors": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Author"
+        }
+      },
+      "Author": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "Lina Meruane"
+          },
+          "country_of_birth": {
+            "type": "string",
+            "example": "Chile"
+          },
+          "is_dead": {
+            "type": "boolean",
+            "example": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-31T17:57:53.057Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-31T17:57:53.057Z"
+          }
+        }
+      },
+      "AuthorLinks": {
+        "type": "object",
+        "properties": {
+          "self": {
+            "$ref": "#/components/schemas/AuthorSelf"
+          }
+        }
+      },
+      "AuthorSelf": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string",
+            "example": "http://johns-bookstore-server.herokuapp.com/authors/42"
+          }
+        }
+      },
+      "Readers": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Reader"
+        }
+      },
+      "Reader": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "example": "Ian Stevens"
+          },
+          "age": {
+            "type": "integer",
+            "example": 28
+          },
+          "email": {
+            "type": "string",
+            "example": "ianstevens@example-mail.com"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-31T17:57:53.057Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2023-01-31T17:57:53.057Z"
+          }
+        }
+      },
+      "ReaderLinks": {
+        "type": "object",
+        "properties": {
+          "self": {
+            "$ref": "#/components/schemas/ReaderSelf"
+          }
+        }
+      },
+      "ReaderSelf": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string",
+            "example": "http://johns-bookstore-server.herokuapp.com/readers/2"
+          }
+        }
+      }
+    }
+  }
+}

@@ -32,25 +32,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use('/', express.static(path.join(__dirname, 'dist')))
+app.use('/', express.static(path.join(__dirname)))
 app.get('/', (req, res) => {
   res.send('Hello World')
 });
 
 app.get('/swagger.json', (req, res) => {
   try {
-    const k = fs.readdirSync(__dirname);
-    const swaggerDoc = fs.readFileSync('swagger.json', 'utf8');
-    const responseBody = {
-      k,
-      swaggerDoc
-    }
-    res.send(responseBody);
+    const swaggerDoc = fs.readFileSync('./swagger.json', 'utf8');
+    res.send(swaggerDoc);
   } catch (e) {
-    const responseBody = {
-      k,
-      swaggerDoc
-    }
-    res.status(500).send(responseBody);
+    res.status(500).send(e.message);
   }
 });
 
