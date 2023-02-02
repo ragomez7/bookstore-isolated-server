@@ -38,8 +38,9 @@ app.get('/', (req, res) => {
 
 app.get('/swagger.json', (req, res) => {
   try {
-    const swaggerDoc = fs.readFileSync('./swagger.json', 'utf8');
-    res.send(swaggerDoc);
+    const k = fs.readdirSync(__dirname);
+    // const swaggerDoc = fs.readFileSync('./swagger.json', 'utf8');
+    res.send(k);
   } catch (e) {
     res.status(500).send(e.message);
   }
