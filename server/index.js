@@ -12,10 +12,11 @@ import { fileURLToPath } from 'url';
 
 
 export const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  host: 'localhost',
+  port: 5432,
+  user: 'me',
+  password: 'password',
+  database: 'bookstore'
 });
 
 const app = express();
